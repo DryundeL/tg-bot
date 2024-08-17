@@ -7,23 +7,23 @@ import { StartCommand } from "./commands/start.command";
 import LocalSession from "telegraf-session-local";
 
 class Bot {
-	bot: Telegraf<IBotContext>;
-	commands: Command[] = [];
+  bot: Telegraf<IBotContext>;
+  commands: Command[] = [];
 
-	constructor(private readonly configService: IConfigService) {
-		this.bot = new Telegraf<IBotContext>(this.configService.get('TG_TOKEN'));
-		this.bot.use(new LocalSession({database: 'sessions.json'}).middleware());
-	}
+  constructor(private readonly configService: IConfigService) {
+    this.bot = new Telegraf<IBotContext>(this.configService.get("TG_TOKEN"));
+    this.bot.use(new LocalSession({ database: "sessions.json" }).middleware());
+  }
 
-	init() {
-		this.commands = [new StartCommand(this.bot)];
+  init() {
+    this.commands = [new StartCommand(this.bot)];
 
-		for (const command of this.commands) {
-			command.handle();
-		}
+    for (const command of this.commands) {
+      command.handle();
+    }
 
-		this.bot.launch();
-	}
+    this.bot.launch();
+  }
 }
 
 const bot = new Bot(new ConfigService());
