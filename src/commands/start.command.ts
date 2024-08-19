@@ -9,24 +9,45 @@ export class StartCommand extends Command {
 
   handle(): void {
     this.bot.start((ctx) => {
-      console.log(ctx.session);
+      // Инициализируем объект ctx.session.user, если он не существует
+      if (!ctx.session.user) {
+        ctx.session.user = {
+          id: undefined,
+          username: undefined, // Инициализируем пустой строкой или другим значением по умолчанию
+        };
+      }
+
+      ctx.session.user.id = ctx.from?.id;
+      ctx.session.user.username = ctx.from?.username;
       ctx.reply(
-        "Вам понравился курс?",
+        "Выберите действие",
         Markup.inlineKeyboard([
-          Markup.button.callback("Like", "course_like"),
-          Markup.button.callback("dislike", "course_dislike"),
+          Markup.button.callback("Список просмотренных фильмов/сериалов", "films_list"),
+          Markup.button.callback("Добавить фильм", "add_film"),
+          Markup.button.callback("Редактировать фильм", "edit_film"),
+          Markup.button.callback("Удалить фильм", "delete_film"),
         ]),
       );
     });
 
-    this.bot.action("course_like", (ctx) => {
-      ctx.session.courseLike = true;
-      ctx.editMessageText("Круто");
-    });
+    // this.bot.action("films_list", (ctx) => {
+    //   ctx.session.courseLike = true;
+    //   ctx.editMessageText("Круто");
+    // });
 
-    this.bot.action("course_dislike", (ctx) => {
-      ctx.session.courseLike = true;
-      ctx.editMessageText("Не круто");
-    });
+    // this.bot.action("add_film", (ctx) => {
+    //   ctx.session.courseLike = true;
+    //   ctx.editMessageText("Не круто");
+    // });
+
+    // this.bot.action("edit_film", (ctx) => {
+    //   ctx.session.courseLike = true;
+    //   ctx.editMessageText("Не круто");
+    // });
+
+    // this.bot.action("delete_film", (ctx) => {
+    //   ctx.session.courseLike = true;
+    //   ctx.editMessageText("Не круто");
+    // });
   }
 }
