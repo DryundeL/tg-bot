@@ -22,32 +22,17 @@ export class StartCommand extends Command {
       ctx.reply(
         "Выберите действие",
         Markup.inlineKeyboard([
-          Markup.button.callback("Список просмотренных фильмов/сериалов", "films_list"),
-          Markup.button.callback("Добавить фильм", "add_film"),
-          Markup.button.callback("Редактировать фильм", "edit_film"),
-          Markup.button.callback("Удалить фильм", "delete_film"),
+          [
+            Markup.button.callback(
+              "Список просмотренных фильмов/сериалов",
+              "films_list",
+            ),
+          ],
+          [Markup.button.callback("Добавить фильм", "add_film")],
+          [Markup.button.callback("Редактировать фильм", "edit_film")],
+          [Markup.button.callback("Удалить фильм", "delete_film")],
         ]),
       );
     });
-
-    // this.bot.action("films_list", (ctx) => {
-    //   ctx.session.courseLike = true;
-    //   ctx.editMessageText("Круто");
-    // });
-
-    // this.bot.action("add_film", (ctx) => {
-    //   ctx.session.courseLike = true;
-    //   ctx.editMessageText("Не круто");
-    // });
-
-    // this.bot.action("edit_film", (ctx) => {
-    //   ctx.session.courseLike = true;
-    //   ctx.editMessageText("Не круто");
-    // });
-
-    // this.bot.action("delete_film", (ctx) => {
-    //   ctx.session.courseLike = true;
-    //   ctx.editMessageText("Не круто");
-    // });
   }
 }
