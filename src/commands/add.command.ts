@@ -22,39 +22,47 @@ export class AddCommand extends Command {
     this.bot.on("text", async (ctx) => {
       if (ctx.session.filmStep) {
         switch (ctx.session.filmStep) {
-          case AddFilmStep.TITLE:
-            {
-              ctx.session.film = { title: ctx.message.text, genre: "", rating: 0 };
-              ctx.session.filmStep = AddFilmStep.GENRE;
-              await ctx.reply("Введите жанр фильма:");
-              break;
-            }
+          case AddFilmStep.TITLE: {
+            ctx.session.film = {
+              title: ctx.message.text,
+              genre: "",
+              rating: 0,
+            };
+            ctx.session.filmStep = AddFilmStep.GENRE;
+            await ctx.reply("Введите жанр фильма:");
+            break;
+          }
 
-          case AddFilmStep.GENRE:
-            {
-              if (ctx.session.film) {
-                ctx.session.film.genre = ctx.message.text;
-                ctx.session.filmStep = AddFilmStep.RATING;
-                await ctx.reply("Оцените фильм по шкале от 1 до 10:");
-              }
-              break;
+          case AddFilmStep.GENRE: {
+            if (ctx.session.film) {
+              ctx.session.film.genre = ctx.message.text;
+              ctx.session.filmStep = AddFilmStep.RATING;
+              await ctx.reply("Оцените фильм по шкале от 1 до 10:");
             }
+            break;
+          }
 
-          case AddFilmStep.RATING:
-            { 
-              const rating = parseInt(ctx.message.text);
-              if (ctx.session.film && !isNaN(rating) && rating >= 1 && rating <= 10) {
-                ctx.session.film.rating = rating;
-                await this.saveFilm(ctx.session.film);
-                await ctx.reply(
-                  `Фильм "${ctx.session.film.title}" добавлен с рейтингом ${ctx.session.film.rating}/10 в жанре "${ctx.session.film.genre}".`
-                );
-                this.resetSession(ctx);
-              } else {
-                await ctx.reply("Пожалуйста, введите корректное число от 1 до 10.");
-              }
-              break;
+          case AddFilmStep.RATING: {
+            const rating = parseInt(ctx.message.text);
+            if (
+              ctx.session.film &&
+              !isNaN(rating) &&
+              rating >= 1 &&
+              rating <= 10
+            ) {
+              ctx.session.film.rating = rating;
+              await this.saveFilm(ctx.session.film);
+              await ctx.reply(
+                `Фильм "${ctx.session.film.title}" добавлен с рейтингом ${ctx.session.film.rating}/10 в жанре "${ctx.session.film.genre}".`,
+              );
+              this.resetSession(ctx);
+            } else {
+              await ctx.reply(
+                "Пожалуйста, введите корректное число от 1 до 10.",
+              );
             }
+            break;
+          }
 
           default:
             break;
@@ -63,7 +71,7 @@ export class AddCommand extends Command {
     });
   }
 
-   private async saveFilm(film: Film) {
+  private async saveFilm(film: Film) {
     // Здесь вы можете реализовать сохранение фильма
     console.log("Сохранение фильма:", film);
     // Пример: запись в базу данных или файл

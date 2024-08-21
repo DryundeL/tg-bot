@@ -18,11 +18,14 @@ export class ConfigService implements IConfigService {
     this.config = parsed;
   }
 
-  get(key: string): string {
+  get(key: string, defaultValue?: string): string {
     const res = this.config[key];
 
     if (!res) {
-      throw new Error("key not found");
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      throw new Error(`Key "${key}" not found in .env configuration`);
     }
 
     return res;
