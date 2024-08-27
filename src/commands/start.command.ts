@@ -20,6 +20,16 @@ export class StartCommand extends Command {
       ctx.session.user.id = ctx.from?.id;
       ctx.session.user.username = ctx.from?.username;
       ctx.reply(
+        "Добро пожаловать! Нажмите на кнопку ниже, чтобы открыть меню:",
+        Markup.keyboard([["📋 Открыть меню"]])
+          .resize()
+          .oneTime(false), // Клавиатура будет отображаться постоянно
+      );
+    });
+
+    // Обработка нажатия на кнопку "Открыть меню"
+    this.bot.hears("📋 Открыть меню", (ctx) => {
+      ctx.reply(
         "Выберите действие",
         Markup.inlineKeyboard([
           [

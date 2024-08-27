@@ -1,6 +1,7 @@
 import { Telegraf } from "telegraf";
 import { Command } from "./command.class";
 import { Film, IBotContext } from "../context/context.interface";
+import pool from "../db/db.config";
 
 enum AddFilmStep {
   TITLE = "TITLE",
@@ -51,7 +52,7 @@ export class AddCommand extends Command {
               rating <= 10
             ) {
               ctx.session.film.rating = rating;
-              await this.saveFilm(ctx.session.film);
+              await this.saveFilm(ctx.session.film, ctx.session.user.username);
               await ctx.reply(
                 `Фильм "${ctx.session.film.title}" добавлен с рейтингом ${ctx.session.film.rating}/10 в жанре "${ctx.session.film.genre}".`,
               );
@@ -71,13 +72,27 @@ export class AddCommand extends Command {
     });
   }
 
-  private async saveFilm(film: Film) {
-    // Здесь вы можете реализовать сохранение фильма
+  private async saveFilm(film: Film, username: string | undefined) {
     console.log("Сохранение фильма:", film);
-    // Пример: запись в базу данных или файл
+    const createUsersTableQuery = `
+      INSERT INTO film_reviews (title, genre, rating, username)
+      VALUES ($1, $2, $3, $4);
+    `;
+
+    try {
+      const client = await pool.connect();
+      await client.query(createUsersTableQuery, [
+        film.title,
+        film.genre,
+        film.rating,
+        username,
+      ]);
+      client.release();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  // Метод для сброса сессии после завершения добавления фильма
   private resetSession(ctx: IBotContext) {
     delete ctx.session.filmStep;
     delete ctx.session.film;

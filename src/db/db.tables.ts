@@ -13,20 +13,16 @@ async function createTables() {
   `;
 
   try {
-    // Подключаемся к базе данных
     const client = await pool.connect();
 
-    // Выполняем SQL-запросы для создания таблиц
     await client.query(createUsersTableQuery);
 
     console.log("Таблицы успешно созданы.");
 
-    // Завершаем соединение
     client.release();
   } catch (err) {
     console.error("Ошибка при создании таблиц:", err);
   } finally {
-    // Закрываем пул подключений
     await pool.end();
   }
 }
