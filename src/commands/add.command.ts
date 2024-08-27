@@ -21,6 +21,8 @@ export class AddCommand extends Command {
     });
 
     this.bot.on("text", async (ctx) => {
+      const username = ctx.from?.username;
+
       if (ctx.session.filmStep) {
         switch (ctx.session.filmStep) {
           case AddFilmStep.TITLE: {
@@ -52,7 +54,7 @@ export class AddCommand extends Command {
               rating <= 10
             ) {
               ctx.session.film.rating = rating;
-              await this.saveFilm(ctx.session.film, ctx.session.user.username);
+              await this.saveFilm(ctx.session.film, username);
               await ctx.reply(
                 `Фильм "${ctx.session.film.title}" добавлен с рейтингом ${ctx.session.film.rating}/10 в жанре "${ctx.session.film.genre}".`,
               );
