@@ -10,6 +10,7 @@ import { IndexCommand } from "./commands/index.command";
 import { DeleteCommand } from "./commands/delete.command";
 import { ShowCommand } from "./commands/show.command";
 
+
 class Bot {
   bot: Telegraf<IBotContext>;
   commands: Command[] = [];

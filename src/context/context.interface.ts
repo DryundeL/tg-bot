@@ -21,6 +21,7 @@ export interface Review {
 }
 
 export interface SessionData {
+  waitingForRating: boolean;
   user: User;
   review?: Review;
   reviewStep?: AddReviewStep;
