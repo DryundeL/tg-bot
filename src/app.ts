@@ -7,6 +7,7 @@ import { StartCommand } from "./commands/start.command";
 import LocalSession from "telegraf-session-local";
 import { AddCommand } from "./commands/add.command";
 import { IndexCommand } from "./commands/index.command";
+import { DeleteCommand } from "./commands/delete.command";
 
 class Bot {
   bot: Telegraf<IBotContext>;
@@ -22,6 +23,7 @@ class Bot {
       new StartCommand(this.bot),
       new AddCommand(this.bot),
       new IndexCommand(this.bot),
+      new DeleteCommand(this.bot),
     ];
 
     for (const command of this.commands) {

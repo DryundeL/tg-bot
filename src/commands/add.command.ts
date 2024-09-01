@@ -22,7 +22,7 @@ export class AddCommand extends Command {
     "Романтика",
     "Научный",
     "Триллер",
-    "Попаданцы"
+    "Попаданцы",
   ];
 
   private types: string[] = [
@@ -32,7 +32,7 @@ export class AddCommand extends Command {
     "Дорама",
     "Манга",
     "Манхва",
-    "Маньхуа"
+    "Маньхуа",
   ];
 
   constructor(bot: Telegraf<IBotContext>) {
@@ -42,21 +42,21 @@ export class AddCommand extends Command {
   handle(): void {
     this.bot.action("add_review", async (ctx) => {
       ctx.session.review = {
-              id: undefined,
-              type: ctx.session.review?.type ?? "",
-              title: "",
-              genre: "",
-              rating: 0,
-            };
+        id: undefined,
+        type: ctx.session.review?.type ?? "",
+        title: "",
+        genre: "",
+        rating: 0,
+      };
       ctx.session.reviewStep = AddReviewStep.TYPE;
-      
-       await ctx.reply(
+
+      await ctx.reply(
         "Выберите тип предмета обзора:",
         Markup.inlineKeyboard(
-          this.types.map((type, index) =>
-            [Markup.button.callback(type, `type_${index}`)]
-          )
-        )
+          this.types.map((type, index) => [
+            Markup.button.callback(type, `type_${index}`),
+          ]),
+        ),
       );
     });
 
@@ -65,8 +65,6 @@ export class AddCommand extends Command {
 
       if (ctx.session.reviewStep) {
         switch (ctx.session.reviewStep) {
-
-          
           case AddReviewStep.TITLE: {
             ctx.session.review = {
               id: undefined,
@@ -79,10 +77,10 @@ export class AddCommand extends Command {
             await ctx.reply(
               "Выберите жанр фильма:",
               Markup.inlineKeyboard(
-                this.genres.map((genre, index) =>
-                  [Markup.button.callback(genre, `genre_${index}`)]
-                )
-              )
+                this.genres.map((genre, index) => [
+                  Markup.button.callback(genre, `genre_${index}`),
+                ]),
+              ),
             );
             break;
           }
@@ -96,14 +94,14 @@ export class AddCommand extends Command {
               rating <= 10
             ) {
               ctx.session.review.rating = rating;
-              await this.saveFilm(ctx.session.review, username);
+              await this.saveReview(ctx.session.review, username);
               await ctx.reply(
-                `Обзор на "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`
+                `Обзор на "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
               );
               this.resetSession(ctx);
             } else {
               await ctx.reply(
-                "Пожалуйста, введите корректное число от 1 до 10."
+                "Пожалуйста, введите корректное число от 1 до 10.",
               );
             }
             break;
@@ -119,7 +117,7 @@ export class AddCommand extends Command {
       const callbackQuery = ctx.callbackQuery as CallbackQuery;
 
       if ("data" in callbackQuery) {
-        const typeIndex = parseInt(callbackQuery.data.split('_')[1]);
+        const typeIndex = parseInt(callbackQuery.data.split("_")[1]);
 
         if (ctx.session.review) {
           ctx.session.review.type = this.types[typeIndex];
@@ -133,7 +131,7 @@ export class AddCommand extends Command {
       const callbackQuery = ctx.callbackQuery as CallbackQuery;
 
       if ("data" in callbackQuery) {
-        const genreIndex = parseInt(callbackQuery.data.split('_')[1]);
+        const genreIndex = parseInt(callbackQuery.data.split("_")[1]);
 
         if (ctx.session.review) {
           ctx.session.review.genre = this.genres[genreIndex];
@@ -144,7 +142,7 @@ export class AddCommand extends Command {
     });
   }
 
-  private async saveFilm(review: Review, username: string | undefined) {
+  private async saveReview(review: Review, username: string | undefined) {
     const createUsersTableQuery = `
       INSERT INTO reviews (type, title, genre, rating, username)
       VALUES ($1, $2, $3, $4, $5);

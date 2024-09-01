@@ -30,15 +30,10 @@ export class StartCommand extends Command {
 
     this.bot.hears("📋 Открыть меню", (ctx) => {
       ctx.reply(
-        "Выберите действие",
+        "Выберите действие:",
         Markup.inlineKeyboard([
-          [
-            Markup.button.callback(
-              "Список обзоров",
-              "reviews_list",
-            ),
-          ],
-          [Markup.button.callback("Добавить обзор", "add_review")],
+          [Markup.button.callback("🗂️ Список обзоров", "reviews_list")],
+          [Markup.button.callback("➕ Добавить обзор", "add_review")],
         ]),
       );
     });
@@ -63,7 +58,7 @@ export class StartCommand extends Command {
       const client = await pool.connect();
 
       const checkResult = await client.query(checkUserQuery, [username]);
-      
+
       if (checkResult.rows.length > 0) {
         console.log("Пользователь уже существует:", checkResult.rows[0]);
         client.release();
