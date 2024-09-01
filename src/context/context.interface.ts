@@ -1,6 +1,7 @@
 import { Context } from "telegraf";
 
-enum AddFilmStep {
+enum AddReviewStep {
+  TYPE = "TYPE",
   TITLE = "TITLE",
   GENRE = "GENRE",
   RATING = "RATING",
@@ -11,7 +12,9 @@ export interface User {
   username: string | undefined;
 }
 
-export interface Film {
+export interface Review {
+  id: number | undefined;
+  type: string;
   title: string;
   genre: string;
   rating: number;
@@ -19,8 +22,8 @@ export interface Film {
 
 export interface SessionData {
   user: User;
-  film?: Film;
-  filmStep?: AddFilmStep;
+  review?: Review;
+  reviewStep?: AddReviewStep;
 }
 
 export interface IBotContext extends Context {

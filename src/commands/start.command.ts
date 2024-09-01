@@ -34,13 +34,11 @@ export class StartCommand extends Command {
         Markup.inlineKeyboard([
           [
             Markup.button.callback(
-              "Список просмотренных фильмов/сериалов",
-              "films_list",
+              "Список обзоров",
+              "reviews_list",
             ),
           ],
-          [Markup.button.callback("Добавить фильм", "add_film")],
-          [Markup.button.callback("Редактировать фильм", "edit_film")],
-          [Markup.button.callback("Удалить фильм", "delete_film")],
+          [Markup.button.callback("Добавить обзор", "add_review")],
         ]),
       );
     });
@@ -51,18 +49,32 @@ export class StartCommand extends Command {
       throw new Error("Username не может быть пустым");
     }
 
-    const query = `
-    INSERT INTO users (username)
-    VALUES ($1);
-  `;
+    const checkUserQuery = `
+      SELECT * FROM users WHERE username = $1;
+    `;
+
+    const insertUserQuery = `
+      INSERT INTO users (username)
+      VALUES ($1)
+      RETURNING *;
+    `;
 
     try {
       const client = await pool.connect();
-      const result = await client.query(query, [username]);
+
+      const checkResult = await client.query(checkUserQuery, [username]);
+      
+      if (checkResult.rows.length > 0) {
+        console.log("Пользователь уже существует:", checkResult.rows[0]);
+        client.release();
+        return checkResult.rows[0];
+      }
+
+      const insertResult = await client.query(insertUserQuery, [username]);
       client.release();
 
-      console.log("Пользователь добавлен или обновлен:", result.rows[0]);
-      return result.rows[0];
+      console.log("Пользователь добавлен:", insertResult.rows[0]);
+      return insertResult.rows[0];
     } catch (error) {
       console.error("Ошибка при добавлении пользователя:", error);
       throw error;

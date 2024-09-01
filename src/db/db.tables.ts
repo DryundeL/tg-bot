@@ -10,12 +10,13 @@ async function createTables() {
     );
   `;
   const createFilmReviewsTableQuery = `
-    CREATE TABLE IF NOT EXISTS film_reviews (
+    CREATE TABLE IF NOT EXISTS reviews (
       id SERIAL PRIMARY KEY,
-      username VARCHAR(255) UNIQUE,
-      title VARCHAR(255),
-      rating INTEGER,
-      genre VARCHAR(255),
+      username VARCHAR(255) NOT NULL,
+      type VARCHAR(255) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      rating INTEGER NOT NULL,
+      genre VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );
