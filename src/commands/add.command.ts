@@ -125,7 +125,7 @@ export class AddCommand extends Command {
         if (ctx.session.review) {
           ctx.session.review.rating = rating;
           await this.saveReview(ctx.session.review, ctx.from?.username);
-          await ctx.reply(
+          await ctx.editMessageText(
             `Обзор на ${ctx.session.review.type} "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
             Markup.inlineKeyboard([
               Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
