@@ -2,11 +2,14 @@ import { Markup, Telegraf } from "telegraf";
 import { Command } from "./command.class";
 import { Review, IBotContext } from "../context/context.interface";
 import pool from "../db/db.config";
-import { CallbackQuery } from "telegraf/typings/core/types/typegram";
+import {
+  CallbackQuery,
+  InlineKeyboardButton,
+} from "telegraf/typings/core/types/typegram";
 
 enum AddReviewStep {
-  TYPE = "TYPE",
   TITLE = "TITLE",
+  TYPE = "TYPE",
   GENRE = "GENRE",
   RATING = "RATING",
 }
@@ -41,75 +44,29 @@ export class AddCommand extends Command {
 
   handle(): void {
     this.bot.action("add_review", async (ctx) => {
-      ctx.session.review = {
-        id: undefined,
-        type: ctx.session.review?.type ?? "",
-        title: "",
-        genre: "",
-        rating: 0,
-      };
-      ctx.session.reviewStep = AddReviewStep.TYPE;
-
-      await ctx.reply(
-        "Выберите тип предмета обзора:",
-        Markup.inlineKeyboard(
-          this.types.map((type, index) => [
-            Markup.button.callback(type, `type_${index}`),
-          ]),
-        ),
-      );
+      ctx.session.reviewStep = AddReviewStep.TITLE;
+      await ctx.reply("Введите название фильма, который хотите добавить:");
     });
 
     this.bot.on("text", async (ctx) => {
-      const username = ctx.from?.username;
-
       if (ctx.session.reviewStep) {
-        switch (ctx.session.reviewStep) {
-          case AddReviewStep.TITLE: {
-            ctx.session.review = {
-              id: undefined,
-              type: ctx.session.review?.type ?? "",
-              title: ctx.message.text,
-              genre: "",
-              rating: 0,
-            };
-            ctx.session.reviewStep = AddReviewStep.GENRE;
-            await ctx.reply(
-              "Выберите жанр фильма:",
-              Markup.inlineKeyboard(
-                this.genres.map((genre, index) => [
-                  Markup.button.callback(genre, `genre_${index}`),
-                ]),
-              ),
-            );
-            break;
-          }
+        ctx.session.review = {
+          id: undefined,
+          type: ctx.session.review?.type ?? "",
+          title: ctx.message.text,
+          genre: "",
+          rating: 0,
+        };
+        ctx.session.reviewStep = AddReviewStep.TYPE;
 
-          case AddReviewStep.RATING: {
-            const rating = parseInt(ctx.message.text);
-            if (
-              ctx.session.review &&
-              !isNaN(rating) &&
-              rating >= 1 &&
-              rating <= 10
-            ) {
-              ctx.session.review.rating = rating;
-              await this.saveReview(ctx.session.review, username);
-              await ctx.reply(
-                `Обзор на "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
-              );
-              this.resetSession(ctx);
-            } else {
-              await ctx.reply(
-                "Пожалуйста, введите корректное число от 1 до 10.",
-              );
-            }
-            break;
-          }
-
-          default:
-            break;
-        }
+        await ctx.reply(
+          "Выберите тип предмета обзора:",
+          Markup.inlineKeyboard(
+            this.types.map((type, index) => [
+              Markup.button.callback(type, `type_${index}`),
+            ]),
+          ),
+        );
       }
     });
 
@@ -121,8 +78,15 @@ export class AddCommand extends Command {
 
         if (ctx.session.review) {
           ctx.session.review.type = this.types[typeIndex];
-          ctx.session.reviewStep = AddReviewStep.TITLE;
-          await ctx.reply(`Введите название ${ctx.session.review.type}:`);
+          ctx.session.reviewStep = AddReviewStep.GENRE;
+          await ctx.editMessageText(
+            "Выберите жанр фильма:",
+            Markup.inlineKeyboard(
+              this.genres.map((genre, index) => [
+                Markup.button.callback(genre, `genre_${index}`),
+              ]),
+            ),
+          );
         }
       }
     });
@@ -136,7 +100,38 @@ export class AddCommand extends Command {
         if (ctx.session.review) {
           ctx.session.review.genre = this.genres[genreIndex];
           ctx.session.reviewStep = AddReviewStep.RATING;
-          await ctx.reply("Оцените фильм по шкале от 1 до 10:");
+          await ctx.editMessageText(
+            "Выберите рейтинг обзора:",
+            Markup.inlineKeyboard(
+              Array.from({ length: 10 }, (_, i) =>
+                Markup.button.callback(`${i + 1}`, `rating_${i + 1}`),
+              ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
+                if (index % 4 === 0) acc.push([]);
+                acc[acc.length - 1].push(button);
+                return acc;
+              }, []),
+            ),
+          );
+        }
+      }
+    });
+
+    this.bot.action(/^rating_\d+$/, async (ctx) => {
+      const callbackQuery = ctx.callbackQuery as CallbackQuery;
+
+      if ("data" in callbackQuery) {
+        const rating = parseInt(callbackQuery.data.split("_")[1]);
+
+        if (ctx.session.review) {
+          ctx.session.review.rating = rating;
+          await this.saveReview(ctx.session.review, ctx.from?.username);
+          await ctx.reply(
+            `Обзор на ${ctx.session.review.type} "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
+            Markup.inlineKeyboard([
+              Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
+            ]),
+          );
+          this.resetSession(ctx);
         }
       }
     });

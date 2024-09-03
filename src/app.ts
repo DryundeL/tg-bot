@@ -9,7 +9,7 @@ import { AddCommand } from "./commands/add.command";
 import { IndexCommand } from "./commands/index.command";
 import { DeleteCommand } from "./commands/delete.command";
 import { ShowCommand } from "./commands/show.command";
-
+import { EditRatingCommand } from "./commands/edit.rating.command";
 
 class Bot {
   bot: Telegraf<IBotContext>;
@@ -26,6 +26,7 @@ class Bot {
       new IndexCommand(this.bot),
       new ShowCommand(this.bot),
       new AddCommand(this.bot),
+      new EditRatingCommand(this.bot),
       new DeleteCommand(this.bot),
     ];
 

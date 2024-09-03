@@ -22,9 +22,19 @@ export class ShowCommand extends Command {
           `Обзор на ${review.type} "${review.title}" \nС рейтигом ${review.rating}/10 \nВ жанре ${review.genre}`,
           Markup.inlineKeyboard([
             [Markup.button.callback("⬅️ Назад", "reviews_list")],
-            [Markup.button.callback("✏️ Редактировать рейтинг", "edit_review_rating")],
+            [
+              Markup.button.callback(
+                "✏️ Редактировать рейтинг",
+                "edit_review_rating",
+              ),
+            ],
             [Markup.button.callback("🗑️ Удалить обзор", "delete_review")],
-            [Markup.button.callback("🗂️👥 Обзоры пользователей", "users_review")],
+            [
+              Markup.button.callback(
+                "🗂️👥 Обзоры пользователей",
+                "users_review",
+              ),
+            ],
           ]),
         );
       }

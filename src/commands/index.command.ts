@@ -56,6 +56,7 @@ export class IndexCommand extends Command {
     const query = `
       SELECT * FROM reviews
       WHERE username = $1
+      ORDER BY updated_at DESC
     `;
 
     try {

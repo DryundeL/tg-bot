@@ -1,77 +1,66 @@
 import { Markup, Telegraf } from "telegraf";
 import { Command } from "./command.class";
-import { Review, IBotContext } from '../context/context.interface';
+import { Review, IBotContext } from "../context/context.interface";
 import pool from "../db/db.config";
+import { CallbackQuery, InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 export class EditRatingCommand extends Command {
-
   constructor(bot: Telegraf<IBotContext>) {
     super(bot);
   }
 
   handle(): void {
     this.bot.action("edit_review_rating", async (ctx) => {
-      console.log("Action 'edit_review_rating' triggered");
-
-      if (!ctx.session.review) {
-        console.error("Review not found in session");
-        await ctx.reply("Не удалось найти обзор в сессии. Пожалуйста, попробуйте снова.");
-        return;
-      }
-
-      // Устанавливаем флаг ожидания ввода рейтинга
-      ctx.session.waitingForRating = true;
-
-      console.log("Review found in session:", ctx.session.review);
-      await ctx.reply("Введите новый рейтинг обзора:");
+      await ctx.editMessageText(
+        "Выберите рейтинг обзора:",
+        Markup.inlineKeyboard(
+          Array.from({ length: 10 }, (_, i) =>
+            Markup.button.callback(`${i + 1}`, `edit_rating_${i + 1}`),
+          ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
+            if (index % 4 === 0) acc.push([]);
+            acc[acc.length - 1].push(button);
+            return acc;
+          }, []),
+        ),
+      );
     });
 
-    this.bot.on("text", async (ctx) => {
-      console.log("Received text:", ctx.message.text);
+    this.bot.action(/^edit_rating_\d+$/, async (ctx) => {
+      const callbackQuery = ctx.callbackQuery as CallbackQuery;
 
-      // Проверяем, ожидает ли бот ввода рейтинга
-      if (ctx.session.waitingForRating) {
-        const review = ctx.session.review;
-        const rating = parseInt(ctx.message.text);
+      if ("data" in callbackQuery) {
+        const rating = parseInt(callbackQuery.data.split("_")[2]);
 
-        console.log("Parsed rating:", rating);
-
-        if (review && !isNaN(rating) && rating >= 1 && rating <= 10) {
-          console.log("Updating review rating");
-          await this.updateRatingReview(review, rating, ctx.from?.username);
-          await ctx.reply(
-            "Рейтинг обновлен",
+        if (ctx.session.review) {
+          await this.updateRatingReview(ctx.session.review, rating, ctx.from?.username);
+          await ctx.editMessageText(
+            `Рейтинг обновлен`,
             Markup.inlineKeyboard([
-              [Markup.button.callback("Вернуться", `review_${review?.id}`)],
+              Markup.button.callback("⬅️ Назад", `review_${ctx.session.review.id}`),
             ]),
-          );
-
-          // Сбрасываем флаг ожидания ввода рейтинга
-          ctx.session.waitingForRating = false;
-        } else {
-          console.error("Invalid rating entered or review not found");
-          await ctx.reply(
-            "Пожалуйста, введите корректное число от 1 до 10.",
           );
         }
       }
     });
   }
 
-  private async updateRatingReview(review: Review, rating: number, username: string | undefined) {
+  private async updateRatingReview(
+    review: Review,
+    rating: number,
+    username: string | undefined,
+  ) {
     const updateQuery = `
-      UPDATE reviews SET rating = $1 WHERE username = $2 AND id = $3;
+      UPDATE reviews SET rating = $1, updated_at = NOW() WHERE username = $2 AND id = $3;
     `;
 
     try {
       const client = await pool.connect();
-      const result = await client.query(updateQuery, [
+      await client.query(updateQuery, [
         rating,
         username,
-        review.id
+        review.id,
       ]);
       client.release();
-      console.log("Review updated:", result.rowCount);
     } catch (err) {
       console.error("Ошибка при обновлении рейтинга:", err);
     }
