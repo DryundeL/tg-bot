@@ -14,6 +14,7 @@ export interface User {
 
 export interface Review {
   id: number | undefined;
+  username: string | undefined;
   type: string;
   title: string;
   genre: string;

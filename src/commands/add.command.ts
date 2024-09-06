@@ -52,6 +52,7 @@ export class AddCommand extends Command {
       if (ctx.session.reviewStep) {
         ctx.session.review = {
           id: undefined,
+          username: ctx.from?.username,
           type: ctx.session.review?.type ?? "",
           title: ctx.message.text,
           genre: "",

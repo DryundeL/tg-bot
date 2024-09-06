@@ -2,7 +2,10 @@ import { Markup, Telegraf } from "telegraf";
 import { Command } from "./command.class";
 import { Review, IBotContext } from "../context/context.interface";
 import pool from "../db/db.config";
-import { CallbackQuery, InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import {
+  CallbackQuery,
+  InlineKeyboardButton,
+} from "telegraf/typings/core/types/typegram";
 
 export class EditRatingCommand extends Command {
   constructor(bot: Telegraf<IBotContext>) {
@@ -32,11 +35,18 @@ export class EditRatingCommand extends Command {
         const rating = parseInt(callbackQuery.data.split("_")[2]);
 
         if (ctx.session.review) {
-          await this.updateRatingReview(ctx.session.review, rating, ctx.from?.username);
+          await this.updateRatingReview(
+            ctx.session.review,
+            rating,
+            ctx.from?.username,
+          );
           await ctx.editMessageText(
             `Рейтинг обновлен`,
             Markup.inlineKeyboard([
-              Markup.button.callback("⬅️ Назад", `review_${ctx.session.review.id}`),
+              Markup.button.callback(
+                "⬅️ Назад",
+                `review_${ctx.session.review.id}`,
+              ),
             ]),
           );
         }
@@ -55,11 +65,7 @@ export class EditRatingCommand extends Command {
 
     try {
       const client = await pool.connect();
-      await client.query(updateQuery, [
-        rating,
-        username,
-        review.id,
-      ]);
+      await client.query(updateQuery, [rating, username, review.id]);
       client.release();
     } catch (err) {
       console.error("Ошибка при обновлении рейтинга:", err);

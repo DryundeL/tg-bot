@@ -10,6 +10,7 @@ import { IndexCommand } from "./commands/index.command";
 import { DeleteCommand } from "./commands/delete.command";
 import { ShowCommand } from "./commands/show.command";
 import { EditRatingCommand } from "./commands/edit.rating.command";
+import { UsersReview } from "./commands/users.review.command";
 
 class Bot {
   bot: Telegraf<IBotContext>;
@@ -28,6 +29,7 @@ class Bot {
       new AddCommand(this.bot),
       new EditRatingCommand(this.bot),
       new DeleteCommand(this.bot),
+      new UsersReview(this.bot),
     ];
 
     for (const command of this.commands) {
