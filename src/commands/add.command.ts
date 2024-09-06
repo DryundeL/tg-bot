@@ -49,25 +49,45 @@ export class AddCommand extends Command {
     });
 
     this.bot.on("text", async (ctx) => {
-      if (ctx.session.reviewStep) {
-        ctx.session.review = {
-          id: undefined,
-          username: ctx.from?.username,
-          type: ctx.session.review?.type ?? "",
-          title: ctx.message.text,
-          genre: "",
-          rating: 0,
-        };
-        ctx.session.reviewStep = AddReviewStep.TYPE;
-
-        await ctx.reply(
-          "Выберите тип предмета обзора:",
-          Markup.inlineKeyboard(
-            this.types.map((type, index) => [
-              Markup.button.callback(type, `type_${index}`),
-            ]),
-          ),
+      if (ctx.session.reviewStep === AddReviewStep.TITLE) {
+        const existingReview = await this.findReviewByTitle(
+          ctx.from?.username,
+          ctx.message.text,
         );
+
+        if (existingReview) {
+          await ctx.reply(
+            `Обзор с названием "${ctx.message.text}" уже существует. Хотите его открыть?`,
+            Markup.inlineKeyboard([
+              [
+                Markup.button.callback(
+                  `Открыть обзор: "${existingReview.title}"`,
+                  `review_${existingReview.id}`,
+                ),
+              ],
+              [Markup.button.callback("⬅️ В главное меню", "back_to_menu")],
+            ]),
+          );
+        } else {
+          ctx.session.review = {
+            id: undefined,
+            username: ctx.from?.username,
+            type: ctx.session.review?.type ?? "",
+            title: ctx.message.text,
+            genre: "",
+            rating: 0,
+          };
+          ctx.session.reviewStep = AddReviewStep.TYPE;
+
+          await ctx.reply(
+            "Выберите тип предмета обзора:",
+            Markup.inlineKeyboard(
+              this.types.map((type, index) => [
+                Markup.button.callback(type, `type_${index}`),
+              ]),
+            ),
+          );
+        }
       }
     });
 
@@ -136,6 +156,28 @@ export class AddCommand extends Command {
         }
       }
     });
+  }
+
+  private async findReviewByTitle(
+    username: string | undefined,
+    title: string,
+  ): Promise<Review | null> {
+    const query = `
+      SELECT * FROM reviews
+      WHERE username = $1
+      AND title ILIKE $2
+      LIMIT 1;
+  `;
+
+    try {
+      const client = await pool.connect();
+      const result = await client.query(query, [username, title]);
+      client.release();
+      return result.rows[0] || null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
   }
 
   private async saveReview(review: Review, username: string | undefined) {

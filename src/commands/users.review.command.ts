@@ -20,7 +20,10 @@ export class UsersReview extends Command {
             ⭐️ Вот обзоры других пользователей на ${ctx.session.review?.type} "${ctx.session.review?.title}":
 
             \n${reviews
-              .map((review, index) => `${index + 1}. *${review.username}* — Оценка: *${review.rating}/10*`)
+              .map(
+                (review, index) =>
+                  `${index + 1}. *${review.username}* — Оценка: *${review.rating}/10*`,
+              )
               .join("\n\n")}
           `;
 
@@ -29,14 +32,19 @@ export class UsersReview extends Command {
           ]);
 
           await ctx.editMessageText(text, {
-            parse_mode: 'Markdown',
-            reply_markup: inlineKeyboard.reply_markup, // Добавляем вызов .reply_markup
+            parse_mode: "Markdown",
+            reply_markup: inlineKeyboard.reply_markup,
           });
         } else {
           await ctx.editMessageText(
             "Никто не добавил обзор на этот фильм",
             Markup.inlineKeyboard([
-              [Markup.button.callback("⬅️ Назад", `review_${ctx.session.review?.id}`)],
+              [
+                Markup.button.callback(
+                  "⬅️ Назад",
+                  `review_${ctx.session.review?.id}`,
+                ),
+              ],
             ]),
           );
         }
