@@ -20,4 +20,4 @@ jobs:
 
     - name: Copy and Build on Server
       run: |
-        tar czf - . | ssh -o StrictHostKeyChecking=no -p 2222 user@${{ secrets.SERVER_IP }} 'docker build -t telegram-bot:latest - && cd /home/andrew/review-bot && docker-compose down && docker-compose up -d'
+        tar czf - . | ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} 'docker build -t telegram-bot:latest - && cd /home/andrew/review-bot && docker-compose down && docker-compose up -d'
