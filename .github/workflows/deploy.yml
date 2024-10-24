@@ -11,13 +11,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3  # Подтягиваем код из репозитория
+      uses: actions/checkout@v3  # Подтягиваем код из репозитория для возможности отслеживания изменений
 
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.4  # Настраиваем SSH для подключения к серверу
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Copy and Build on Server
+    - name: Deploy to server
       run: |
-        tar czf - . | ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} 'docker build -t telegram-bot:latest - && cd /home/andrew/review-bot && docker-compose down && docker-compose up -d'
+        ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} '
+          docker build -t telegram-bot:latest https://github.com/ваш-репозиторий-url.git#main &&
+          cd /home/andrew/review-bot &&
+          docker-compose down &&
+          docker-compose up -d'
