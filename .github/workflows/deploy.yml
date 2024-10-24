@@ -21,7 +21,7 @@ jobs:
     - name: Deploy to server
       run: |
         ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} '
-          docker build -t telegram-bot:latest https://github.com/ваш-репозиторий-url.git#main &&
+          docker build -t telegram-bot:latest https://github.com/DryundeL/tg-bot.git#main &&
           cd /home/andrew/review-bot &&
           docker-compose down &&
           docker-compose up -d'
