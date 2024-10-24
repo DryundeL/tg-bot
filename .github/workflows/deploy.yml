@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main  # Укажите вашу целевую ветку
+      - main  # Запускаем action при пуше в ветку main
 
 jobs:
   deploy:
@@ -11,13 +11,13 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v3  # Шаг, чтобы GitHub Actions подтянул код
 
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.5.4
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.4  # Используем SSH для подключения к серверу
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Приватный SSH ключ для подключения
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} 'bash /home/andrew/review-bot/deploy.sh'
+        ssh -o StrictHostKeyChecking=no -p 2222 andrew@${{ secrets.SERVER_IP }} 'cd /review-bot && git pull origin main && docker-compose down && docker-compose up --build -d'
