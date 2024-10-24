@@ -20,4 +20,4 @@ jobs:
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} 'cd /review-bot && git pull origin main && docker-compose down && docker-compose up --build -d'
+        ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} 'cd /home/andrew/review-bot && git pull origin main && docker-compose down && docker-compose up --build -d'
