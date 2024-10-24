@@ -1,27 +1,53 @@
-name: Deploy to Server
+name: Build and Deploy Docker Image via SSH
 
 on:
   push:
-    branches:
-      - main  # Запуск по пушу в ветку main
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3  # Подтягиваем код из репозитория для возможности отслеживания изменений
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.4  # Настраиваем SSH для подключения к серверу
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-    - name: Deploy to server
-      run: |
-        ssh -o StrictHostKeyChecking=no -p 2222 root@${{ secrets.SERVER_IP }} '
-          docker build -t telegram-bot:latest https://github.com/DryundeL/tg-bot.git#main &&
-          cd /home/andrew/review-bot &&
-          docker-compose down &&
-          docker-compose up -d'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Image
+        run: |
+          docker build -t telegram-bot:latest .
+
+      - name: Save Docker Image
+        run: |
+          docker save telegram-bot:latest | gzip > telegram-bot.tar.gz
+
+      - name: Copy Docker Image to Server
+        uses: appleboy/scp-action@v0.2.1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "telegram-bot.tar.gz"
+          target: "~/"
+
+      - name: Load Docker Image and Restart Container
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            docker load -i ~/telegram-bot.tar.gz
+            docker stop telegram-bot || true
+            docker rm telegram-bot || true
+            docker run -d \
+              --name telegram-bot \
+              --env-file /home/andrew/review-bot/.env \
+              telegram-bot:latest
