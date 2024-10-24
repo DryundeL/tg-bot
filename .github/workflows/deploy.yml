@@ -26,15 +26,14 @@ jobs:
         run: |
           docker save telegram-bot:latest | gzip > telegram-bot.tar.gz
 
-      - name: Copy Docker Image to Server
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: "telegram-bot.tar.gz"
-          target: "~/"
+      - name: Copy Docker Image to Server via SCP
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          scp -o StrictHostKeyChecking=no -P ${{ secrets.SERVER_PORT }} telegram-bot.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:~/
 
       - name: Load Docker Image and Restart Container via SSH
         env:
@@ -52,6 +51,7 @@ jobs:
             fi
             docker run -d \
               --name telegram-bot \
-              --env-file /home/user/telegram-bot/.env \
+              --restart unless-stopped \
+              -v /home/andrew/review-bot/.env:/app/.env \
               telegram-bot:latest
           ENDSSH
