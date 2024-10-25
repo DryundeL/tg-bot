@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "app.tar.gz"
-          target: "/home/andrew/review-bot/app.tar.gz"
+          target: "/home/andrew/app.tar.gz"
 
       - name: Run deploy script on server
         uses: appleboy/ssh-action@v0.1.5
