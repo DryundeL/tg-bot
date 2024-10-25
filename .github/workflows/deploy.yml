@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Compress code for transfer
-        run: tar --warning=no-file-changed -czf app.tar.gz .
+        run: git archive -o app.tar.gz HEAD
 
       - name: Copy code to server
         uses: appleboy/scp-action@v0.1.4
