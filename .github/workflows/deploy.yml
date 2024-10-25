@@ -16,8 +16,6 @@ jobs:
         with:
           node-version: '20'
 
-      - run: npm install
-
       # Копируем код на сервер
       - name: Copy code to server
         uses: appleboy/scp-action@v0.1.4
