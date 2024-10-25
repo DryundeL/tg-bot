@@ -1,8 +1,9 @@
 # Используем базовый образ Node.js
 FROM node:20
 
-# Заменяем репозитории на альтернативные
-RUN sed -i 's|http://deb.debian.org/debian|http://ftp.us.debian.org/debian|g' /etc/apt/sources.list
+# Удаление старых источников и добавление новых
+RUN echo "deb http://ftp.us.debian.org/debian bookworm main" > /etc/apt/sources.list \
+	&& echo "deb http://ftp.us.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list
 
 # Установка PostgreSQL клиента
 RUN apt-get update && apt-get install -y postgresql-client
