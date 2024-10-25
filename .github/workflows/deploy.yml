@@ -1,4 +1,4 @@
-name: Deploy application
+name: Deploy Bot
 
 on:
   push:
@@ -8,35 +8,23 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: '20'
 
-      # Копируем код на сервер
-      - name: Copy code to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: "./"
-          target: "/home/andrew/review-bot/app"
-          overwrite: true
-
-      # Запускаем скрипт деплоя на сервере
-      - name: Run deploy script on server
-        uses: appleboy/ssh-action@v0.1.5
+      - name: Login and Deploy
+        uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd /home/andrew/review-bot/app
-            chmod +x deploy.sh
+            cd /path/to/your/project
             ./deploy.sh
