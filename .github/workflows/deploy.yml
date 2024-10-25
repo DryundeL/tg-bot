@@ -27,7 +27,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "./"
-          target: "/home/andrew/review-bot"
+          target: "/home/andrew/review-bot/app"
           overwrite: true
 
       # Запускаем скрипт деплоя на сервере
@@ -39,6 +39,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd /home/${{ secrets.SERVER_USER }}/app
+            cd /home/andrew/review-bot/app
             chmod +x deploy.sh
             ./deploy.sh
