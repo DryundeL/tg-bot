@@ -21,7 +21,7 @@ jobs:
           remote_host: ${{ secrets.SERVER_HOST }}
           remote_user: ${{ secrets.SERVER_USER }}
           remote_port: ${{ secrets.SERVER_PORT }}
-          ssh_private_key: ${{ secrets.SERVER_SSH_KEY }}
+          remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
       - name: Run deploy script on server
         uses: appleboy/ssh-action@v0.1.5
