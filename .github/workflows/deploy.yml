@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Compress code for transfer
-        run: git archive -o app.tar.gz HEAD
+        run: tar --exclude='./app.tar.gz' --exclude='./node_modules' --exclude='./.git' -czf app.tar.gz .
 
       - name: Copy code to server
         uses: appleboy/scp-action@v0.1.4
@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "app.tar.gz"
-          target: "/home/andrew/app.tar.gz"
+          target: "/home/andrew/review-bot/app.tar.gz"
 
       - name: Run deploy script on server
         uses: appleboy/ssh-action@v0.1.5
