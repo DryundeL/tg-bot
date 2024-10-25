@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "postbuild": "node dist/db/db.tables.js",
     "start": "node ./dist/app.js",
     "format": "prettier --write ."
   },
