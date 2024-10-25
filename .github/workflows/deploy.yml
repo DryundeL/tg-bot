@@ -26,5 +26,5 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd /path/to/your/project
+            cd ~/review-bot
             ./deploy.sh
