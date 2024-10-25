@@ -2,7 +2,7 @@
 FROM node:20
 
 # Заменяем репозитории на альтернативные
-RUN sed -i 's/http:\/\/deb.debian.org\/debian/http:\/\/ftp.us.debian.org\/debian/g' /etc/apt/sources.list
+RUN sed -i 's|http://deb.debian.org/debian|http://ftp.us.debian.org/debian|g' /etc/apt/sources.list
 
 # Установка PostgreSQL клиента
 RUN apt-get update && apt-get install -y postgresql-client
