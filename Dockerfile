@@ -1,8 +1,8 @@
 # Используем базовый образ Node.js
-FROM node:20
+FROM node:20-alpine
 
-# Установка PostgreSQL клиента без обновления
-RUN apt-get install -y --no-install-recommends postgresql-client
+# Устанавливаем PostgreSQL клиент
+RUN apk update && apk add --no-cache postgresql-client
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
