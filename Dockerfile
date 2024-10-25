@@ -1,9 +1,6 @@
 # Используем базовый образ Node.js
 FROM node:20-alpine
 
-# Устанавливаем PostgreSQL клиент
-RUN apk update && apk add --no-cache postgresql-client
-
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
