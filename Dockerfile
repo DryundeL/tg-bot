@@ -1,5 +1,8 @@
 # Используем базовый образ Node.js
-FROM node:20-alpine
+FROM node:20
+
+# Установка PostgreSQL клиента
+RUN apt-get update && apt-get install -y postgresql-client
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
