@@ -42,6 +42,7 @@ export class IndexCommand extends Command {
     });
 
     this.bot.action("back_to_menu", async (ctx) => {
+      this.resetSession(ctx);
       await ctx.editMessageText(
         "Выберите действие:",
         Markup.inlineKeyboard([
@@ -50,6 +51,11 @@ export class IndexCommand extends Command {
         ]),
       );
     });
+  }
+
+  private resetSession(ctx: IBotContext) {
+    delete ctx.session.reviewStep;
+    delete ctx.session.review;
   }
 
   private async showReviews(username: string): Promise<Review[]> {

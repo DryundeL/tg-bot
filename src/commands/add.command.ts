@@ -14,7 +14,8 @@ enum AddReviewStep {
   RATING = "RATING",
 }
 
-// Определим тип данных для словаря
+const enumValues = Object.values(AddReviewStep);
+
 type CaseForms = {
   [key: string]: { genitive: string };
 };
@@ -61,7 +62,7 @@ export class AddCommand extends Command {
     const words = text.split(" ");
     const genitiveWords = words.map((word) => {
       const lowerWord = word.toLowerCase();
-      return this.dictionary[lowerWord]?.genitive || word; // Возвращаем слово в родительном падеже или исходное
+      return this.dictionary[lowerWord]?.genitive || word;
     });
     return genitiveWords.join(" ");
   }
@@ -72,142 +73,182 @@ export class AddCommand extends Command {
       ctx.session.review = {
         id: undefined,
         username: ctx.from?.username,
-        type: ctx.session.review?.type ?? "",
+        type: "",
         title: "",
         genre: "",
         rating: 0,
       };
 
-      const buttons = this.types.map((type, index) => [
-        Markup.button.callback(type, `type_${index}`),
-      ]);
-
-      buttons.unshift([
-        Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
-      ]);
-
-      await ctx.editMessageText(
-        "Выберите предмет обзора:",
-        Markup.inlineKeyboard(buttons),
-      );
+      await this.displayStep(ctx, AddReviewStep.TYPE);
     });
 
-    this.bot.action(/^type_\d+$/, async (ctx) => {
+    this.bot.action(/^(type|genre|rating)_\d+$/, async (ctx) => {
       const callbackQuery = ctx.callbackQuery as CallbackQuery;
 
       if ("data" in callbackQuery) {
-        const typeIndex = parseInt(callbackQuery.data.split("_")[1]);
+        const [step, index] = callbackQuery.data.split("_");
+        const stepIndex = parseInt(index, 10);
 
-        if (ctx.session.review) {
+        if (!ctx.session.review) {
           ctx.session.review = {
             id: undefined,
             username: ctx.from?.username,
-            type: ctx.session.review?.type ?? "",
+            type: "",
             title: "",
             genre: "",
             rating: 0,
           };
-          ctx.session.review.type = this.types[typeIndex];
+        }
+
+        switch (step) {
+          case "type":
+            ctx.session.review.type = this.types[stepIndex];
+            ctx.session.reviewStep = AddReviewStep.TITLE;
+            await this.displayStep(ctx, AddReviewStep.TITLE);
+            break;
+          case "genre":
+            ctx.session.review.genre = this.genres[stepIndex];
+            ctx.session.reviewStep = AddReviewStep.RATING;
+            await this.displayStep(ctx, AddReviewStep.RATING);
+            break;
+          case "rating":
+            ctx.session.review.rating = stepIndex + 1;
+            await this.saveReview(ctx.session.review, ctx.from?.username);
+            await ctx.editMessageText(
+              `Обзор на ${this.toGenitive(ctx.session.review.type)} "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
+              Markup.inlineKeyboard([
+                Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
+              ]),
+            );
+            this.resetSession(ctx);
+            break;
+        }
+      }
+    });
+
+    this.bot.action(/^back_to_(type|title|genre)$/, async (ctx) => {
+      const currentStep = ctx.session.reviewStep;
+      const prevStep = this.getPreviousEnumValue(currentStep);
+      
+      switch (prevStep) {
+        case "TYPE": {
+          ctx.session.reviewStep = AddReviewStep.TYPE;
+          await this.displayStep(ctx, AddReviewStep.TYPE);
+          break;
+        }
+        case "TITLE": {
           ctx.session.reviewStep = AddReviewStep.TITLE;
+          await this.displayStep(ctx, AddReviewStep.TITLE);
+          break;
+        }
+
+        case "GENRE": {
+          ctx.session.reviewStep = AddReviewStep.GENRE;
+          await this.displayStep(ctx, AddReviewStep.GENRE);
+          break;
+        }
+      }
+    });
+
+    this.bot.on("text", async (ctx) => {
+      if (ctx.session.reviewStep === AddReviewStep.TITLE) {
+        if (!ctx.session.review) {
+          ctx.session.review = {
+            id: undefined,
+            username: ctx.from?.username,
+            type: "",
+            title: "",
+            genre: "",
+            rating: 0,
+          };
+        }
+
+        const existingReview = await this.findReviewByTitle(
+          ctx.from?.username,
+          ctx.message.text,
+        );
+
+        if (existingReview) {
           await ctx.reply(
-            `Введите название для ${this.toGenitive(ctx.session.review?.type)}, который(ое) хотите добавить:`,
-          );
-
-          this.bot.on("text", async (ctx) => {
-            if (ctx.session.reviewStep === AddReviewStep.TITLE) {
-              const existingReview = await this.findReviewByTitle(
-                ctx.from?.username,
-                ctx.message.text,
-              );
-
-              if (existingReview) {
-                await ctx.reply(
-                  `Обзор с названием "${ctx.message.text}" уже существует. Хотите его открыть?`,
-                  Markup.inlineKeyboard([
-                    [
-                      Markup.button.callback(
-                        `Открыть обзор: "${existingReview.title}"`,
-                        `review_${existingReview.id}`,
-                      ),
-                    ],
-                    [
-                      Markup.button.callback(
-                        "⬅️ В главное меню",
-                        "back_to_menu",
-                      ),
-                    ],
-                  ]),
-                );
-              } else {
-                ctx.session.review = {
-                  id: undefined,
-                  username: ctx.from?.username,
-                  type: ctx.session.review?.type ?? "",
-                  title: ctx.message.text,
-                  genre: "",
-                  rating: 0,
-                };
-                ctx.session.reviewStep = AddReviewStep.GENRE;
-
-                await ctx.reply(
-                  `Выберите жанр "${ctx.session.review.title}":`,
-                  Markup.inlineKeyboard(
-                    this.genres.map((genre, index) => [
-                      Markup.button.callback(genre, `genre_${index}`),
-                    ]),
-                  ),
-                );
-              }
-            }
-          });
-        }
-      }
-    });
-
-    this.bot.action(/^genre_\d+$/, async (ctx) => {
-      const callbackQuery = ctx.callbackQuery as CallbackQuery;
-
-      if ("data" in callbackQuery) {
-        const genreIndex = parseInt(callbackQuery.data.split("_")[1]);
-
-        if (ctx.session.review) {
-          ctx.session.review.genre = this.genres[genreIndex];
-          ctx.session.reviewStep = AddReviewStep.RATING;
-          await ctx.editMessageText(
-            "Выберите рейтинг обзора:",
-            Markup.inlineKeyboard(
-              Array.from({ length: 10 }, (_, i) =>
-                Markup.button.callback(`${i + 1}`, `rating_${i + 1}`),
-              ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
-                if (index % 4 === 0) acc.push([]);
-                acc[acc.length - 1].push(button);
-                return acc;
-              }, []),
-            ),
-          );
-        }
-      }
-    });
-
-    this.bot.action(/^rating_\d+$/, async (ctx) => {
-      const callbackQuery = ctx.callbackQuery as CallbackQuery;
-
-      if ("data" in callbackQuery) {
-        const rating = parseInt(callbackQuery.data.split("_")[1]);
-
-        if (ctx.session.review) {
-          ctx.session.review.rating = rating;
-          await this.saveReview(ctx.session.review, ctx.from?.username);
-          await ctx.editMessageText(
-            `Обзор на ${this.toGenitive(ctx.session.review.type)} "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
+            `Обзор с названием "${ctx.message.text}" уже существует. Хотите его открыть?`,
             Markup.inlineKeyboard([
-              Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
+              [
+                Markup.button.callback(
+                  `Открыть обзор: "${existingReview.title}"`,
+                  `review_${existingReview.id}`,
+                ),
+              ],
+              [Markup.button.callback("⬅️ В главное меню", "back_to_menu")],
             ]),
           );
-          this.resetSession(ctx);
+        } else {
+          ctx.session.review.title = ctx.message.text;
+          ctx.session.reviewStep = AddReviewStep.GENRE;
+          await this.displayStep(ctx, AddReviewStep.GENRE);
         }
       }
     });
+  }
+
+  private async displayStep(ctx: IBotContext, step: AddReviewStep) {
+    if (!ctx.session.review) {
+      ctx.session.review = {
+        id: undefined,
+        username: ctx.from?.username,
+        type: "",
+        title: "",
+        genre: "",
+        rating: 0,
+      };
+    }
+
+    let message = "";
+    let buttons: InlineKeyboardButton[][] = [];
+
+    switch (step) {
+      case AddReviewStep.TYPE:
+        message = "Выберите предмет обзора:";
+        buttons = this.types.map((type, index) => [
+          Markup.button.callback(type, `type_${index}`),
+        ]);
+        buttons.unshift([
+          Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
+        ]);
+        await ctx.editMessageText(message, Markup.inlineKeyboard(buttons));
+        break;
+
+      case AddReviewStep.TITLE:
+        message = `Введите название ${this.toGenitive(ctx.session.review?.type)}, который(ое) хотите добавить:`;
+        buttons = [[Markup.button.callback("⬅️ Назад", "back_to_type")]];
+        await ctx.editMessageText(message, Markup.inlineKeyboard(buttons));
+        break;
+
+      case AddReviewStep.GENRE:
+        message = `Выберите жанр "${ctx.session.review?.title}":`;
+        buttons = [
+          ...this.genres.map((genre, index) => [
+            Markup.button.callback(genre, `genre_${index}`),
+          ]),
+          [Markup.button.callback("⬅️ Назад", "back_to_title")],
+        ];
+        await ctx.reply(message, Markup.inlineKeyboard(buttons)); // Используем ctx.reply вместо ctx.editMessageText
+        break;
+
+      case AddReviewStep.RATING:
+        message = "Выберите рейтинг обзора:";
+        buttons = [
+          ...Array.from({ length: 10 }, (_, i) =>
+            Markup.button.callback(`${i + 1}`, `rating_${i + 1}`),
+          ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
+            if (index % 4 === 0) acc.push([]);
+            acc[acc.length - 1].push(button);
+            return acc;
+          }, []),
+          [Markup.button.callback("⬅️ Назад", "back_to_genre")],
+        ];
+        await ctx.editMessageText(message, Markup.inlineKeyboard(buttons));
+        break;
+    }
   }
 
   private async findReviewByTitle(
@@ -219,7 +260,7 @@ export class AddCommand extends Command {
       WHERE username = $1
       AND title ILIKE $2
       LIMIT 1;
-  `;
+    `;
 
     try {
       const client = await pool.connect();
@@ -251,6 +292,18 @@ export class AddCommand extends Command {
     } catch (err) {
       console.error(err);
     }
+  }
+
+  private getPreviousEnumValue(
+    currentValue: AddReviewStep | undefined,
+  ): AddReviewStep | undefined {
+    if (currentValue !== undefined) {
+      const currentIndex = enumValues.indexOf(currentValue);
+      if (currentIndex > 0) {
+        return enumValues[currentIndex - 1] as AddReviewStep;
+      }
+    }
+    return undefined;
   }
 
   private resetSession(ctx: IBotContext) {
