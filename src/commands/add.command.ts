@@ -69,6 +69,15 @@ export class AddCommand extends Command {
   handle(): void {
     this.bot.action("add_review", async (ctx) => {
       ctx.session.reviewStep = AddReviewStep.TYPE;
+      ctx.session.review = {
+        id: undefined,
+        username: ctx.from?.username,
+        type: ctx.session.review?.type ?? "",
+        title: "",
+        genre: "",
+        rating: 0,
+      };
+
       const buttons = this.types.map((type, index) => [
         Markup.button.callback(type, `type_${index}`),
       ]);
@@ -76,7 +85,7 @@ export class AddCommand extends Command {
       buttons.unshift([
         Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
       ]);
-      
+
       await ctx.editMessageText(
         "Выберите предмет обзора:",
         Markup.inlineKeyboard(buttons),
