@@ -239,7 +239,7 @@ export class AddCommand extends Command {
         buttons = [
           [Markup.button.callback("⬅️ Назад", "back_to_genre")],
           ...Array.from({ length: 10 }, (_, i) =>
-            Markup.button.callback(`${i + 1}`, `rating_${i + 1}`),
+            Markup.button.callback(`${i + 1}`, `rating_${i}`),
           ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
             if (index % 4 === 0) acc.push([]);
             acc[acc.length - 1].push(button);
