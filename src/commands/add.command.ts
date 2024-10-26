@@ -129,7 +129,7 @@ export class AddCommand extends Command {
     this.bot.action(/^back_to_(type|title|genre)$/, async (ctx) => {
       const currentStep = ctx.session.reviewStep;
       const prevStep = this.getPreviousEnumValue(currentStep);
-      
+
       switch (prevStep) {
         case "TYPE": {
           ctx.session.reviewStep = AddReviewStep.TYPE;
@@ -226,10 +226,10 @@ export class AddCommand extends Command {
       case AddReviewStep.GENRE:
         message = `Выберите жанр "${ctx.session.review?.title}":`;
         buttons = [
+          [Markup.button.callback("⬅️ Назад", "back_to_title")],
           ...this.genres.map((genre, index) => [
             Markup.button.callback(genre, `genre_${index}`),
           ]),
-          [Markup.button.callback("⬅️ Назад", "back_to_title")],
         ];
         await ctx.reply(message, Markup.inlineKeyboard(buttons)); // Используем ctx.reply вместо ctx.editMessageText
         break;
@@ -237,6 +237,7 @@ export class AddCommand extends Command {
       case AddReviewStep.RATING:
         message = "Выберите рейтинг обзора:";
         buttons = [
+          [Markup.button.callback("⬅️ Назад", "back_to_genre")],
           ...Array.from({ length: 10 }, (_, i) =>
             Markup.button.callback(`${i + 1}`, `rating_${i + 1}`),
           ).reduce<InlineKeyboardButton[][]>((acc, button, index) => {
@@ -244,7 +245,6 @@ export class AddCommand extends Command {
             acc[acc.length - 1].push(button);
             return acc;
           }, []),
-          [Markup.button.callback("⬅️ Назад", "back_to_genre")],
         ];
         await ctx.editMessageText(message, Markup.inlineKeyboard(buttons));
         break;
