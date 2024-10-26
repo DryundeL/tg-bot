@@ -69,13 +69,17 @@ export class AddCommand extends Command {
   handle(): void {
     this.bot.action("add_review", async (ctx) => {
       ctx.session.reviewStep = AddReviewStep.TYPE;
-      await ctx.reply(
+      const buttons = this.types.map((type, index) => [
+        Markup.button.callback(type, `type_${index}`),
+      ]);
+
+      buttons.unshift([
+        Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
+      ]);
+      
+      await ctx.editMessageText(
         "Выберите предмет обзора:",
-        Markup.inlineKeyboard(
-          this.types.map((type, index) => [
-            Markup.button.callback(type, `type_${index}`),
-          ]),
-        ),
+        Markup.inlineKeyboard(buttons),
       );
     });
 
@@ -186,7 +190,7 @@ export class AddCommand extends Command {
           ctx.session.review.rating = rating;
           await this.saveReview(ctx.session.review, ctx.from?.username);
           await ctx.editMessageText(
-            `Обзор на ${ this.toGenitive(ctx.session.review.type) } "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
+            `Обзор на ${this.toGenitive(ctx.session.review.type)} "${ctx.session.review.title}" добавлен с рейтингом ${ctx.session.review.rating}/10 в жанре "${ctx.session.review.genre}".`,
             Markup.inlineKeyboard([
               Markup.button.callback("⬅️ В главное меню", "back_to_menu"),
             ]),
